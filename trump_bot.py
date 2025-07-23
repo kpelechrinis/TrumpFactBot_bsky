@@ -39,6 +39,8 @@ def post_to_bluesky(text):
     print(f"USERNAME: {repr(USERNAME)}")
     print(f"APP_PASSWORD: {repr(APP_PASSWORD)}")
     print(f"LENGTHS: {len(USERNAME)} chars, {len(APP_PASSWORD)} chars")
+    print(f"USERNAME bytes: {USERNAME.encode('utf-8')}")
+    print(f"APP_PASSWORD bytes: {APP_PASSWORD.encode('utf-8')}")
     client.login(USERNAME, APP_PASSWORD)
 
     MAX_LENGTH = 300
