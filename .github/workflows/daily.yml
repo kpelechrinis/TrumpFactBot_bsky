@@ -1,0 +1,28 @@
+name: Post Daily Trump Fact
+
+on:
+  schedule:
+    - cron: "0 14 * * *"  # Runs daily at 10 AM ET
+  workflow_dispatch:
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run bot
+        run: python trump.py
+        env:
+          BSKY_USERNAME: ${{ secrets.BSKY_USERNAME }}
+          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
