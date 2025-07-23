@@ -5,12 +5,12 @@ from bs4 import BeautifulSoup
 from atproto import Client, models
 from dotenv import load_dotenv
 
-# Load environment variables
+# Load credentials
 load_dotenv()
 USERNAME = os.getenv("BSKY_USERNAME").strip()
 APP_PASSWORD = os.getenv("BSKY_APP_PASSWORD").strip()
 
-# Define max pages per ruling
+# PolitiFact scraping limits
 MAX_PAGES_BY_RATING = {
     "false": 50,
     "pants-on-fire": 25
@@ -18,33 +18,32 @@ MAX_PAGES_BY_RATING = {
 
 def pick_random_weighted_page(max_pages):
     weights = [1 / (i + 1) for i in range(max_pages)]
-    total = sum(weights)
     return random.choices(range(1, max_pages + 1), weights=weights, k=1)[0]
 
-def get_recent_quotes(client, limit=50):
+def get_recent_links(client, limit=50):
     feed = client.get_author_feed(actor=USERNAME, limit=limit)
-    quotes = []
+    links = []
 
     for item in feed.feed:
         if hasattr(item.post.record, "text"):
             text = item.post.record.text
-            first_line = text.split("\n")[0].strip()
-            if first_line.startswith("🔥 Trump Claim: “"):
-                quotes.append(first_line)
+            lines = text.split("\n")
+            for line in reversed(lines):
+                if line.strip().startswith("http") and "politifact.com" in line:
+                    links.append(line.strip())
+                    break
+    return set(links)
 
-    return quotes
-
-def get_random_trump_claim(recent_quotes, max_attempts=5):
+def get_random_trump_claim(recent_links, max_attempts=5):
     headers = {"User-Agent": "Mozilla/5.0"}
 
-    for attempt in range(max_attempts):
+    for _ in range(max_attempts):
         rating_choice = random.choice(["false", "pants-on-fire"])
         max_pages = MAX_PAGES_BY_RATING[rating_choice]
         page = pick_random_weighted_page(max_pages)
 
         url = f"https://www.politifact.com/factchecks/list/?ruling={rating_choice}&speaker=donald-trump&page={page}"
         print(f"🎯 Scraping rating: {rating_choice.upper()} — Page {page}")
-
         response = requests.get(url, headers=headers)
         soup = BeautifulSoup(response.text, "html.parser")
         statements = soup.find_all("li", class_="o-listicle__item")
@@ -65,13 +64,13 @@ def get_random_trump_claim(recent_quotes, max_attempts=5):
         quote_tag = s.select_one("div.m-statement__quote a")
         quote = quote_tag.text.strip()
         quote_line = f"🔥 Trump Claim: “{quote}”"
+        link = "https://www.politifact.com" + quote_tag["href"]
 
-        # Check for duplicates
-        if quote_line in recent_quotes:
-            print(f"⚠️ Already posted: \"{quote}\" — retrying...")
+        # Skip duplicates
+        if link in recent_links:
+            print(f"⚠️ Already posted: {link} — retrying...")
             continue
 
-        link = "https://www.politifact.com" + quote_tag["href"]
         meta = s.select_one("div.m-statement__desc").text.strip()
         rating_text = rating_img["alt"].strip().capitalize()
 
@@ -92,7 +91,7 @@ def post_to_bluesky(text, client):
         client.send_post(text=text)
         return
 
-    # Create a thread
+    # Split into thread
     lines = text.split('\n')
     quote_line = lines[0]
     rest_lines = lines[1:]
@@ -102,21 +101,13 @@ def post_to_bluesky(text, client):
     first_post = truncated_quote + "\n" + "\n".join(rest_lines[:-1])
     link = rest_lines[-1].strip()
 
-    # Post first
     root_post = client.send_post(text=first_post)
 
-    # Follow-up with the link
     client.send_post(
         text=f"🔗 Full fact-check: {link}",
         reply_to=models.AppBskyFeedPost.ReplyRef(
-            root=models.ComAtprotoRepoStrongRef.Main(
-                uri=root_post.uri,
-                cid=root_post.cid
-            ),
-            parent=models.ComAtprotoRepoStrongRef.Main(
-                uri=root_post.uri,
-                cid=root_post.cid
-            )
+            root=models.ComAtprotoRepoStrongRef.Main(uri=root_post.uri, cid=root_post.cid),
+            parent=models.ComAtprotoRepoStrongRef.Main(uri=root_post.uri, cid=root_post.cid)
         )
     )
 
@@ -125,7 +116,7 @@ if __name__ == "__main__":
     print(f"🔐 Logging in as {USERNAME}")
     client.login(USERNAME, APP_PASSWORD)
 
-    recent_quotes = get_recent_quotes(client)
-    post = get_random_trump_claim(recent_quotes)
+    recent_links = get_recent_links(client)
+    post = get_random_trump_claim(recent_links)
     print("📢 Posting:\n", post)
     post_to_bluesky(post, client)
