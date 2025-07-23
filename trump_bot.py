@@ -5,6 +5,13 @@ from bs4 import BeautifulSoup
 from atproto import Client, models
 from dotenv import load_dotenv
 
+# Add a short random delay before deciding
+time.sleep(random.randint(0, 300))  # Wait 0–5 minutes
+
+if random.random() > 0.6:
+    print("⏳ Decided not to post this time.")
+    exit(0)
+
 # Load credentials
 load_dotenv()
 USERNAME = os.getenv("BSKY_USERNAME").strip()
