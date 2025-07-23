@@ -21,8 +21,13 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Check secrets
+        run: |
+          echo "USERNAME bytes: $(echo -n '${{ secrets.BSKY_USERNAME }}' | wc -c)"
+          echo "APP_PASSWORD bytes: $(echo -n '${{ secrets.BSKY_APP_PASSWORD }}' | wc -c)"
+
       - name: Run bot
-        run: python trump_bot.py
         env:
           BSKY_USERNAME: ${{ secrets.BSKY_USERNAME }}
           BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
+        run: python trump_bot.py
