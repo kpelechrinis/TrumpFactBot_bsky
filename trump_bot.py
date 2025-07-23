@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 # Load credentials from .env
 load_dotenv()
-USERNAME = os.getenv("@trumpfactbot.bsky.social")
+USERNAME = "@trumpfactbot.bsky.social"
 APP_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
 
 def get_random_false_trump_claim():
