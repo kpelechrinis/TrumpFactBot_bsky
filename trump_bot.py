@@ -10,6 +10,9 @@ load_dotenv()
 USERNAME = os.getenv("BSKY_USERNAME")
 APP_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
 
+print(f"USERNAME={repr(USERNAME)}")
+print(f"APP_PASSWORD={repr(APP_PASSWORD)}")
+
 def get_random_false_trump_claim():
     url = "https://www.politifact.com/factchecks/list/?ruling=false&speaker=donald-trump"
     headers = {"User-Agent": "Mozilla/5.0"}
