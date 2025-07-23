@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 # Load credentials from .env
 load_dotenv()
-USERNAME = "@trumpfactbot.bsky.social"
-APP_PASSWORD = os.getenv("BSKY_APP_PASSWORD")
+USERNAME = os.getenv("BSKY_USERNAME").strip()
+APP_PASSWORD = os.getenv("BSKY_APP_PASSWORD").strip()
 
 def get_random_false_trump_claim():
     url = "https://www.politifact.com/factchecks/list/?ruling=false&speaker=donald-trump"
