@@ -36,8 +36,42 @@ def get_random_false_trump_claim():
 
 def post_to_bluesky(text):
     client = Client()
+    print(f"Logging in as: {USERNAME}")
     client.login(USERNAME, APP_PASSWORD)
-    client.send_post(text=text)
+
+    MAX_LENGTH = 300
+
+    if len(text) <= MAX_LENGTH:
+        # Simple case — just post
+        client.send_post(text=text)
+        return
+
+    print(f"⚠️ Post is too long ({len(text)} characters). Creating thread...")
+
+    # Split text: pull out quote and details separately
+    lines = text.split('\n')
+    quote_line = lines[0]
+    rest_lines = lines[1:]
+
+    # Shrink quote if needed
+    allowed_quote_len = MAX_LENGTH - len("\n".join(rest_lines)) - 10
+    truncated_quote = quote_line[:allowed_quote_len].rstrip("…") + "…”"
+    first_post = truncated_quote + "\n" + "\n".join(rest_lines[:-1])
+
+    # Extract just the link
+    link = rest_lines[-1].strip()
+
+    # Post first part
+    root_post = client.send_post(text=first_post)
+
+    # Follow-up post with the link
+    client.send_post(
+        text=f"🔗 Full fact-check: {link}",
+        reply_to={
+            "uri": root_post.uri,
+            "cid": root_post.cid,
+        }
+    )
 
 if __name__ == "__main__":
     post = get_random_false_trump_claim()
