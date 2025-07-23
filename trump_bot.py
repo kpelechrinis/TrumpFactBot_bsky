@@ -36,7 +36,9 @@ def get_random_false_trump_claim():
 
 def post_to_bluesky(text):
     client = Client()
-    print(f"Logging in as: {USERNAME}")
+    print(f"USERNAME: {repr(USERNAME)}")
+    print(f"APP_PASSWORD: {repr(APP_PASSWORD)}")
+    print(f"LENGTHS: {len(USERNAME)} chars, {len(APP_PASSWORD)} chars")
     client.login(USERNAME, APP_PASSWORD)
 
     MAX_LENGTH = 300
