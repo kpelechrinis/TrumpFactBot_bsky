@@ -1,33 +1,34 @@
-name: Post Daily Trump Fact
+name: Post Trump Fact to Bluesky
 
 on:
   schedule:
-    - cron: "0 14 * * *"  # Runs daily at 10 AM ET
-  workflow_dispatch:
+    - cron: '0 */2 * * *'  # Every 2 hours
+  workflow_dispatch:       # Allow manual trigger too
 
 jobs:
-  run-bot:
+  post:
     runs-on: ubuntu-latest
+
+    env:
+      BSKY_USERNAME: ${{ secrets.BSKY_USERNAME }}
+      BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
-          pip install --upgrade pip
+          python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Check secrets
+      - name: Run bot (random chance to post)
         run: |
-          echo "USERNAME bytes: $(echo -n '${{ secrets.BSKY_USERNAME }}' | wc -c)"
-          echo "APP_PASSWORD bytes: $(echo -n '${{ secrets.BSKY_APP_PASSWORD }}' | wc -c)"
-
-      - name: Run bot
-        env:
-          BSKY_USERNAME: ${{ secrets.BSKY_USERNAME }}
-          BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
-        run: python trump_bot.py
+          echo "USERNAME bytes: $(echo -n "${BSKY_USERNAME}" | wc -c)"
+          echo "APP_PASSWORD bytes: $(echo -n "${BSKY_APP_PASSWORD}" | wc -c)"
+          python trump_bot.py
