@@ -22,7 +22,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run bot
-        run: python trump.py
+        run: python trump_bot.py
         env:
           BSKY_USERNAME: ${{ secrets.BSKY_USERNAME }}
           BSKY_APP_PASSWORD: ${{ secrets.BSKY_APP_PASSWORD }}
